@@ -1,0 +1,155 @@
+---
+title: "LifeExp Dashboard"
+format: 
+  dashboard:
+    self-contained: true
+    orientation: rows
+    theme: [united, style.scss]
+editor: visual
+---
+
+```{r}
+#| label: load_packages 
+#| message: false
+
+library(dplyr)
+library(bslib)
+library(bsicons)
+library(gapminder)
+library(reactable)
+library(reactablefmtr)
+library(toastui)
+library(echarts4r)
+library(htmlwidgets)
+library(glue)
+```
+
+```{r}
+#| label: load_data
+#| message: false
+
+df = gapminder::gapminder |> mutate(year = year |> as.character())
+```
+
+#  {.sidebar}
+
+\
+
+The **Gapminder dataset** is a publicly accessible collection of global socioeconomic and demographic data, which is available on their [website](https://www.gapminder.org/). Some of the key features include Life Expectancy, Income Per Capita and Population. On this dashboard, we focus on Life Expectancy.
+
+
+------------------------------------------------------------------------
+
+::: {.callout-note collapse="false"}
+## gdp per capita mean
+
+```{r}
+df |>
+  summarise(gdpPercap_mean = mean(gdpPercap) |> round(1), .by = "continent") |> 
+  arrange(desc(gdpPercap_mean)) |> 
+  reactable(
+    showPageInfo = FALSE, filterable = FALSE, resizable = TRUE, compact = TRUE ,searchable = FALSE
+    ,showPageSizeOptions = FALSE, defaultPageSize = 5, paginationType = "simple"
+  )
+```
+:::
+
+------------------------------------------------------------------------
+
+::: {.callout-tip collapse="false"}
+## Latest population (2007)
+
+```{r}
+df |>
+  filter(year %in% max(df[["year"]])) |> 
+  summarise(pop = sum(pop), .by = "continent") |> 
+  reactable(
+    showPageInfo = FALSE, filterable = FALSE, resizable = TRUE, compact = TRUE ,searchable = FALSE
+    ,showPageSizeOptions = FALSE, defaultPageSize = 5, paginationType = "simple"
+  )
+```
+:::
+
+# 
+
+## Row {height = '40%'}
+
+### Column {width = '20%'}
+
+```{r}
+data = 
+  df |>
+  summarise(lifeExp_mean = mean(lifeExp) |> round(1), .by = "country") |> 
+  ungroup() |>
+  arrange(lifeExp_mean) |> 
+  slice_tail(n = 40) 
+
+data|> 
+  group_by(lifeExp_mean) |> 
+  e_charts(country) |> 
+  e_bar(
+    lifeExp_mean
+    ,stack = "grp"
+    ,label = list(show = TRUE, formatter = "{@[0]} years", position = "right")
+  ) |> 
+  e_flip_coords() |> 
+  e_legend(show = FALSE) |> 
+  e_grid(left = 150) |> 
+  e_hide_grid_lines() |> 
+  e_title(text = "Life expectation mean by country", subtext = "Top ranking") |>
+  e_color(rev(colorRampPalette(c("#4F7792", "#F88677"))(data[["country"]] |> unique() |> length()))) |> 
+  e_tooltip(trigger = "axis")
+
+```
+
+### Column {width = '80%'}
+
+```{r}
+df |> 
+  summarise(lifeExp_mean = mean(lifeExp) |> round(1), .by = "continent") |>
+  e_charts(continent) |>
+  e_pie(
+    lifeExp_mean
+    ,radius = c("55%", "70%")
+    ,label =
+      list(
+        formatter = htmlwidgets::JS("function(params) {return params.value + ' years';}")
+      )
+    ,center = c("50%", "60%")
+    ,itemStyle = list(
+      borderRadius = 11,
+      borderWidth = 2,
+      borderColor = "#fff"
+    )
+  ) |>
+  e_tooltip(trigger = "item") |>
+  e_legend(show = TRUE) |>
+  e_title(
+    text = "Life expectation mean by continent"
+    ,subtext = glue::glue("overall: {df[['lifeExp']] |> mean() |> round(1)} years")
+  ) |>
+  e_legend(top = 50) |> 
+  e_color(c("#F4D771","#4F7792","#B096A7","#F88677","#7C9958"))
+```
+
+```{r}
+df |>
+  summarise(lifeExp_mean = mean(lifeExp) |> round(1), .by = c("continent", "year")) |> 
+  group_by(continent) |> 
+  e_charts(year) |> 
+  e_line(
+    lifeExp_mean
+    ,symbol = 'roundRect'
+    ,lineStyle = list(width = 3, opacity = 0.8)
+    ,smooth = TRUE
+    # ,label = list(show = TRUE, formatter = "{@[1]} yrs", position = "top")
+  ) |> 
+  e_legend(show = TRUE, type = "scroll") |> 
+  e_datazoom(x_index = c(0, 1)) |> 
+  e_axis_labels(x = "Year", y = "Life expectation mean") |> 
+  e_title(text = "Life expectation mean evolution") |>
+  e_grid(top = 90) |> 
+  e_legend(top = 30) |> 
+  e_tooltip(trigger = "axis") |> 
+  e_color(c("#B096A7","#F88677","#F4D771","#4F7792","#7C9958"))
+```

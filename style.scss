@@ -1,0 +1,52 @@
+/*-- scss:defaults --*/
+
+// fonts
+@import url('https://fonts.googleapis.com/css?family=Lato&display=swap');
+
+$font-family-sans-serif: "Lato", sans-serif;
+
+// colors
+$body-bg: #FFFFFF;
+$body-color: #484F70;
+$navbar-bg: #484F70;
+$navbar-fg: #FFFFFF;
+$card-title-color: #FFFFFF;
+$link-color: #6DA4D3;
+$hover-color: lighten($link-color, 40%);
+$sidebar-fg: #484F70;
+$font-size-base: 0.85rem;
+
+$callout-color-note: #6DA4D3;
+$callout-color-tip: #C1E08B;
+
+// card
+
+$card-border-radius: 25px;
+
+/*-- scss:rules --*/
+
+div.callout-note.callout {
+  border-left-color: #484F70;
+}
+
+div.callout-note.callout-style-default > .callout-header {
+  background-color: #D8F8FD;
+}
+
+div.callout-tip.callout-style-default > .callout-header {
+  background-color: #DAFBE2;
+}
+
+.quarto-dashboard .tabset .card-header .nav-link[role=tab] {
+    border-top-left-radius: 25px;
+    border-top-right-radius: 12.5px;
+}
+
+.quarto-dashboard aside.sidebar {
+    border-top-right-radius: 35px;
+    border-bottom-right-radius: 35px;
+}
+
+.quarto-dashboard #quarto-dashboard-header .navbar .navbar-nav .active {
+    background-color: #484F70;
+}
